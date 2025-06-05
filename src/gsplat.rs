@@ -1,6 +1,7 @@
 pub mod parser;
 
 use crate::parser::{load_ply, RawSplat};
+use anyhow::Result;
 use std::path::Path;
 
 #[repr(C)]
@@ -11,8 +12,6 @@ pub struct Vertex {
 }
 
 fn main() {
-    println!("Hello, world!");
-
     let path = Path::new("assets/train.ply");
     let gsp = load_ply(&path).unwrap();
     println!("Loaded {} splats", gsp.len());
@@ -21,8 +20,8 @@ fn main() {
     let vertices = make_point_vertices(&gsp);
     println!("Made {} vertices", vertices.len());
     println!("{:?}", vertices[0]);
-}
 
+}
 
 fn make_point_vertices(splats: &[RawSplat]) -> Vec<Vertex> {
     splats

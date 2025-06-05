@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGPU + Rust GSplat Viewer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>WebGPU + Rust GSplat Viewer</h1>
+        <canvas id="webgpu-canvas" width="800" height="600"></canvas>
+        <div class="info">
+            <p>This is a simple WebGPU example using Rust and WASM.</p>
+            <p>You should see a red triangle rendered using WebGPU.</p>
+        </div>
+    </div>
+    <script type="module">
+        import init from './pkg/gsplat_viewer.js';
+        
+        async function run() {
+            try {
+                await init();
+                console.log('WebGPU application initialized successfully!');
+            } catch (error) {
+                console.error('Failed to initialize WebGPU application:', error);
+                document.body.innerHTML += `<div class="error">Error: ${error}</div>`;
+            }
+        }
+        
+        run();
+    </script>
+</body>
+</html>
