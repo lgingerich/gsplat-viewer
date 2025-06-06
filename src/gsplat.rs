@@ -11,7 +11,7 @@ pub struct Vertex {
     pub color: [f32; 3],
 }
 
-fn main() {
+fn run() {
     let path = Path::new("assets/train.ply");
     let gsp = load_ply(&path).unwrap();
     println!("Loaded {} splats", gsp.len());

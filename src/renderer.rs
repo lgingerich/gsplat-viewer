@@ -1,3 +1,5 @@
+use crate::parser::RawSplat;
+
 use wasm_bindgen::prelude::*;
 use web_sys::{HtmlCanvasElement};
 
@@ -14,15 +16,19 @@ macro_rules! console_log {
 }
 
 #[wasm_bindgen]
-pub struct WebGpuRenderer {
+pub struct Renderer {
     canvas: HtmlCanvasElement,
+    splats: Vec<RawSplat>,
+    camera_position: [f32; 3],
+    camera_rotation: [f32; 4], // quaternion
+    camera_intrinsics: [f32; 9], // intrinsic matrix
 }
 
 #[wasm_bindgen]
-impl WebGpuRenderer {
-    pub async fn init() -> Result<WebGpuRenderer, JsValue> {
+impl Renderer {
+    pub async fn new() -> Result<Renderer, JsValue> {
         console_error_panic_hook::set_once();
-        console_log!("Initializing WebGPU renderer...");
+        console_log!("Initializing Gaussian Splat Renderer...");
 
         // Get the window and document
         let window = web_sys::window().unwrap();
@@ -45,38 +51,37 @@ impl WebGpuRenderer {
             console_log!("WebGPU is supported!");
         }
 
-        // Set up a simple 2D context for fallback
-        let context = canvas
-            .get_context("2d")?
-            .unwrap()
-            .dyn_into::<web_sys::CanvasRenderingContext2d>()?;
-
-        // Draw a simple triangle using 2D canvas as a placeholder
-        context.set_fill_style(&"#ff0000".into());
-        context.begin_path();
-        context.move_to(400.0, 100.0);  // Top point
-        context.line_to(300.0, 300.0);  // Bottom left
-        context.line_to(500.0, 300.0);  // Bottom right
-        context.close_path();
-        context.fill();
-
-        // Add some text
-        context.set_fill_style(&"#ffffff".into());
-        context.set_font("20px Arial");
-        context.fill_text("WebGPU + Rust Demo", 300.0, 400.0)?;
-        context.fill_text("Red Triangle (2D Canvas Fallback)", 250.0, 430.0)?;
-
-        console_log!("WebGPU renderer initialized successfully!");
-
-        Ok(WebGpuRenderer {
+        Ok(Renderer {
             canvas,
+            splats: vec![],
+            camera_position: [0.0, 0.0, 0.0],
+            camera_rotation: [0.0, 0.0, 0.0, 1.0],
+            camera_intrinsics: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
         })
     }
 
     pub fn render(&self) -> Result<(), JsValue> {
-        // For this simple demo, we just log that render was called
-        console_log!("Render called - triangle is already drawn");
+        console_log!("Rendering...");
+        // Set up a simple 2D context for fallback
+        let context = self.canvas
+            .get_context("2d")?
+            .unwrap()
+            .dyn_into::<web_sys::CanvasRenderingContext2d>()?;
+
+        // Clear canvas
+        context.clear_rect(0.0, 0.0, self.canvas.width() as f64, self.canvas.height() as f64);
+
+        // Set background
+        context.set_fill_style_str("#1a1a1a");
+        context.fill_rect(0.0, 0.0, self.canvas.width() as f64, self.canvas.height() as f64);
+        
         Ok(())
+    }
+
+    fn update_render(&self) {
+        if let Err(e) = self.render() {
+            console_log!("Render error: {:?}", e);
+        }
     }
 
     pub fn resize(&mut self, width: u32, height: u32) {
@@ -84,6 +89,16 @@ impl WebGpuRenderer {
             self.canvas.set_width(width);
             self.canvas.set_height(height);
             console_log!("Canvas resized to {}x{}", width, height);
+            self.update_render();
         }
     }
-} 
+}
+
+// Internal implementation not exposed to WASM
+impl Renderer {
+    pub fn load_splats(&mut self, splats: Vec<RawSplat>) {
+        console_log!("Loading {} splats", splats.len());
+        self.splats = splats;
+        self.update_render();
+    }
+}

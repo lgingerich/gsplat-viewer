@@ -1,17 +1,17 @@
 use wasm_bindgen::prelude::*;
 
 // Module declarations
-pub mod webgpu;
+pub mod renderer;
 pub mod parser;
 
 // Re-export main types for convenience
-pub use webgpu::WebGpuRenderer;
+pub use renderer::Renderer;
 
 // Entry point for the WASM module
 #[wasm_bindgen(start)]
 pub async fn main() -> Result<(), JsValue> {
     // Initialize the WebGPU renderer
-    let renderer = WebGpuRenderer::init().await?;
+    let renderer = Renderer::new().await?;
     
     // Render the initial frame
     renderer.render()?;
